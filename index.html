@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Casas pro final do ano</title>
+<style>
+:root{--bg:#faf7f5;--card:#fff;--ink:#2a2326;--mute:#7a6f74;--acc:#c2410c;--line:#e8e0dc;--ok:#15803d}
+@media(prefers-color-scheme:dark){:root{--bg:#1b1719;--card:#262124;--ink:#f3ecee;--mute:#a89ca1;--acc:#fb923c;--line:#3a3337;--ok:#4ade80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,sans-serif}
+header{padding:24px 16px 8px;max-width:1200px;margin:auto}h1{margin:0 0 4px;font-size:28px}
+header p{margin:0;color:var(--mute)}
+.bar{max-width:1200px;margin:12px auto;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bar select,.bar button,.bar label{font:inherit;padding:8px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px}
+.bar button{cursor:pointer}.bar button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.grid{max-width:1200px;margin:auto;padding:0 16px 40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.card.fav{outline:3px solid var(--acc)}
+.ph{position:relative;aspect-ratio:4/3;background:#0002;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.heart{position:absolute;top:8px;right:8px;border:0;background:#fffd;border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;z-index:2}
+.tag{position:absolute;top:8px;left:8px;background:var(--acc);color:#fff;font-size:12px;padding:3px 9px;border-radius:10px;z-index:2}
+.body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.price{font-size:26px;font-weight:700}.price small{font-size:13px;font-weight:400;color:var(--mute)}
+.tot{font-size:14px;color:var(--mute)}
+.addr{font-weight:600}.sub{color:var(--mute);font-size:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chips span{font-size:12.5px;border:1px solid var(--line);padding:2px 9px;border-radius:12px}
+.chips .m{border-color:var(--ok);color:var(--ok)}
+a.link{margin-top:auto;color:var(--acc);font-weight:600;text-decoration:none}
+footer{max-width:1200px;margin:auto;padding:0 16px 32px;color:var(--mute);font-size:13px}
+</style>
+</head>
+<body>
+<header><h1>🎆 Casas pro final do ano</h1><p>Check-in 31/12/2026 · check-out 03/01/2027 (3 noites) · 6 pessoas · casa/apto inteiro · preços do Airbnb conferidos em 22/10/2026</p></header>
+<div class="bar">
+  <select id="ord"><option value="pp">Menor valor por pessoa</option><option value="nota">Melhor nota</option><option value="q">Mais quartos</option></select>
+  <label>Cidade <select id="cid" style="border:0;padding:0"><option value="">todas</option></select></label>
+  <button id="bpis">🏊 Só com piscina</button>
+  <button id="bchu">🔥 Só com churrasqueira</button>
+  <button id="bfav">♥ Só favoritos</button>
+  <span id="n" style="color:var(--mute)"></span>
+</div>
+<main class="grid" id="g"></main>
+<footer>Valores totais para as 3 noites, como mostrados na listagem do Airbnb; taxa de limpeza e de serviço podem alterar o total final, então confira antes de reservar. Valor por pessoa = total ÷ 6.</footer>
+<script>
+const P="https://a0.muscache.com/im/pictures/";
+// c=cidade q=quartos b=camas r=nota n=avaliações t=total (3 noites) pis/chu/wifi/est
+const L=[
+{id:"53913983",nome:"Chácara agradável com piscina",c:"Brotas",q:3,b:4,r:4.95,n:21,t:3747,pis:1,chu:1,wifi:1,est:1,img:"hosting/Hosting-53913983/original/9d5ba0eb-5cd5-41e3-b994-dc3418fc8c76.jpeg"},
+{id:"737020744700761619",nome:"Casa para a família e amigos",c:"Brotas",q:2,b:5,r:4.94,n:31,t:1225,utn:1,wifi:1,est:1,img:"miso/Hosting-737020744700761619/original/f8078ce4-344a-47a6-a2a4-ec1cb8e8b73d.jpeg"},
+{id:"876201858041624798",nome:"Centro, Brotas",c:"Brotas",q:3,b:6,r:5,n:12,t:4428,chu:1,wifi:1,est:1,img:"hosting/Hosting-876201858041624798/original/35b54770-03d3-45d0-a89b-e3fb74c225a1.jpeg"},
+{id:"1555356899221509078",nome:"Casa de alto padrão, melhor localização",c:"Brotas",q:3,b:8,r:5,n:30,t:15562,pis:1,chu:1,wifi:1,est:1,img:"hosting/Hosting-1555356899221509078/original/c2fac6ef-5cf6-4fb4-8759-17a7aba8c2ff.jpeg"},
+{id:"1561817448250550186",nome:"Casa com vista pro vale e pôr do sol",c:"Brotas",q:3,b:4,r:5,n:4,t:10765,pis:1,chu:1,wifi:1,est:1,img:"hosting/Hosting-1561817448250550186/original/f127cedd-1c02-4bab-bb0e-f7905fd4fe47.jpeg"},
+{id:"1486326095148540010",nome:"Área gourmet e karaokê",c:"Brotas",q:3,b:5,r:4.88,n:16,t:6961,chu:1,wifi:1,est:1,img:"hosting/Hosting-1486326095148540010/original/73b99ae1-b871-49cf-99d9-aacf4643b0e0.png"},
+{id:"868760924363825536",nome:"Apto charmoso no centro",c:"Socorro",q:3,b:5,r:4.98,n:45,t:3232,wifi:1,est:1,img:"miso/Hosting-868760924363825536/original/92f3fcb1-b4ef-42bd-8666-f08f532a3160.jpeg"},
+{id:"1577587331513443513",nome:"Casa perto de Malhas e Rafting",c:"Socorro",q:2,b:4,r:4.73,n:26,t:2844,chu:1,wifi:1,est:1,img:"hosting/Hosting-1577587331513443513/original/688352f6-01d0-4df8-900d-288e41255085.jpeg"},
+{id:"1721097654483241342",nome:"Aconchego do Ju",c:"Socorro",q:3,b:3,r:0,n:0,t:3300,chu:1,wifi:1,est:1,img:"hosting/Hosting-1721097654483241342/original/93142959-aaaf-4ca5-971d-0039596a259e.jpeg"},
+{id:"1335683033683175150",nome:"Casa Paz e Aconchego",c:"Amparo",q:2,b:4,r:4.96,n:47,t:1080,wifi:1,est:1,img:"hosting/Hosting-1335683033683175150/original/1549f088-cb30-4375-b47b-56ac9812f52c.jpeg"},
+{id:"1495133741252982115",nome:"Cantinho do Interior",c:"Pedreira",q:4,b:5,r:4.8,n:5,t:2650,chu:1,wifi:1,est:1,img:"hosting/Hosting-1495133741252982115/original/032bd25d-2d32-4e85-a553-a3d19b200de5.jpeg"},
+{id:"1785863264423820634",nome:"Sítio Bela Vista (lago e fogão a lenha)",c:"Serra Negra",q:4,b:6,r:0,n:0,t:2400,wifi:1,est:1,img:"hosting/Hosting-1785863264423820634/original/098592ad-7b9c-4a8b-b2fc-1a0edf3aa5ea.jpeg"},
+{id:"550020899920732937",nome:"Apto no centro de Serra Negra",c:"Serra Negra",q:3,b:4,r:4.99,n:150,t:3034,wifi:1,est:1,img:"hosting/Hosting-550020899920732937/original/48005261-bc5f-4c75-b2b5-561d242922c0.jpeg"},
+{id:"1488695845683300476",nome:"Apto a 500 m do centro, com garagem",c:"Serra Negra",q:1,b:4,r:5,n:34,t:2148,wifi:1,est:1,img:"hosting/Hosting-1488695845683300476/original/1d217873-9f6d-4771-b296-824d40091a07.jpeg"},
+{id:"1727855013018347058",nome:"Villa Due",c:"Serra Negra",q:2,b:5,r:4.83,n:6,t:4530,wifi:1,est:1,img:"hosting/Hosting-1727855013018347058/original/8fe2eab2-e371-454e-886d-2a5ebc780eec.jpeg"},
+{id:"931959125897579898",nome:"Sítio Nossa Senhora Aparecida",c:"Serra Negra",q:2,b:3,r:4.83,n:70,t:1500,chu:1,wifi:1,est:1,img:"c9ce80e0-8901-4a5d-ac4a-7475e9414dd3.jpg"},
+{id:"879666363334636688",nome:"Hospedagem em meio à natureza",c:"Lindóia",q:2,b:6,r:5,n:78,t:1650,chu:1,est:1,img:"miso/Hosting-879666363334636688/original/c6850aa1-1472-4717-a485-8276a22d853e.jpeg"},
+{id:"1165349238214603242",nome:"Casa no centro de Águas de Lindóia",c:"Águas de Lindóia",q:2,b:4,r:4.94,n:17,t:2700,wifi:1,est:1,img:"miso/Hosting-1165349238214603242/original/8c380d61-b6c0-4695-931f-eaf1ff4c2a2f.jpeg"},
+{id:"853746130559570394",nome:"Casa aconchegante",c:"Águas de Lindóia",q:3,b:5,r:4.92,n:26,t:2740,chu:1,wifi:1,est:1,img:"hosting/Hosting-853746130559570394/original/ef9eeffd-c46c-4820-912b-e0de65406c72.jpeg"},
+{id:"1573446258329456152",nome:"Casa la Vigie",c:"Águas de Lindóia",q:2,b:5,r:4.96,n:24,t:12630,pis:1,chu:1,wifi:1,est:1,img:"hosting/Hosting-1573446258329456152/original/c25b5694-4cdf-4712-b8a8-bc7374d53ba2.jpeg"},
+{id:"1796443566403993322",nome:"Casa aconchegante (nova no Airbnb)",c:"Águas de Lindóia",q:3,b:5,r:0,n:0,t:5400,wifi:1,est:1,img:"hosting/Hosting-1796443566403993322/original/be7d5bb0-1767-4dcf-a609-20db01f7d116.jpeg"},
+{id:"1015321515119848118",nome:"Casa de campo no Circuito das Águas",c:"Itapira",q:3,b:4,r:4.9,n:20,t:3900,chu:1,wifi:1,est:1,img:"hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTAxNTMyMTUxNTExOTg0ODExOA%3D%3D/original/2d259f0e-58a0-4dc7-a322-fb179964e019.jpeg"},
+{id:"1236131048244997720",nome:"Casa Bigi",c:"Monte Sião",q:2,b:4,r:4.93,n:14,t:2690,chu:1,wifi:1,img:"hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTIzNjEzMTA0ODI0NDk5NzcyMA%3D%3D/original/3d062418-dd1b-40ee-8104-c6308522878a.jpeg"}
+];
+const brl=(n,d=0)=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:d,maximumFractionDigits:d});
+const url=a=>`https://www.airbnb.com.br/rooms/${a.id}?check_in=2026-12-31&check_out=2027-01-03&adults=6`;
+const $=s=>document.querySelector(s);
+let favs=[];try{favs=JSON.parse(localStorage.favsAno||"[]")}catch(e){}
+const saveF=()=>{try{localStorage.favsAno=JSON.stringify(favs)}catch(e){}};
+let onlyP=false,onlyC=false,onlyF=false;
+[...new Set(L.map(a=>a.c))].sort().forEach(c=>$("#cid").insertAdjacentHTML("beforeend",`<option>${c}</option>`));
+function render(){
+  const o=$("#ord").value;
+  const l=L.filter(a=>(!$("#cid").value||a.c===$("#cid").value)&&(!onlyP||a.pis)&&(!onlyC||a.chu)&&(!onlyF||favs.includes(a.id)))
+    .sort((a,b)=>o==="nota"?b.r-a.r||a.t-b.t:o==="q"?b.q-a.q||a.t-b.t:a.t-b.t);
+  $("#n").textContent=l.length+" opções";
+  $("#g").innerHTML=l.map(a=>`
+  <article class="card ${favs.includes(a.id)?"fav":""}" data-id="${a.id}">
+    <div class="ph"><img referrerpolicy="no-referrer" loading="lazy" src="${a.img.startsWith("http")?a.img:P+a.img}?im_w=720" alt="${a.nome}">
+      ${a.pis?'<span class="tag">Piscina</span>':""}
+      <button class="heart">${favs.includes(a.id)?"♥":"♡"}</button></div>
+    <div class="body">
+      <div class="price">${brl(a.t/6,2)} <small>por pessoa · 3 noites</small></div>
+      <div class="tot">Total ${brl(a.t)} para 6 pessoas</div>
+      <div class="addr">${a.nome}</div>
+      <div class="sub">${a.c} · ${a.q} quarto${a.q>1?"s":""} · ${a.b} cama${a.b>1?"s":""} · ${a.r?`★ ${String(a.r).replace(".",",")} (${a.n})`:"sem avaliações ainda"}</div>
+      <div class="chips">
+        <span class="${a.pis?"m":""}">${a.pis?"✓":"✗"} piscina</span>
+        <span class="${a.chu?"m":""}">${a.chu?"✓ churrasqueira":a.utn?"utensílios p/ churrasco":"✗ churrasqueira"}</span>
+        <span class="${a.wifi?"m":""}">${a.wifi?"✓":"✗"} Wi-Fi</span>
+        <span class="${a.est?"m":""}">${a.est?"✓":"?"} estacionamento</span>
+      </div>
+      <a class="link" href="${url(a)}" target="_blank" rel="noopener">Ver no Airbnb →</a>
+    </div>
+  </article>`).join("");
+}
+document.addEventListener("click",e=>{
+  const h=e.target.closest(".heart");
+  if(h){const id=h.closest(".card").dataset.id;favs=favs.includes(id)?favs.filter(x=>x!==id):[...favs,id];saveF();render()}
+});
+$("#ord").onchange=$("#cid").onchange=render;
+const tg=(sel,fn)=>$(sel).onclick=e=>{e.target.classList.toggle("on");fn(e.target.classList.contains("on"));render()};
+tg("#bpis",v=>onlyP=v);tg("#bchu",v=>onlyC=v);tg("#bfav",v=>onlyF=v);
+render();
+</script>
+</body>
+</html>
